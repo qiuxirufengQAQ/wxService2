@@ -1,7 +1,9 @@
 package com.colson.service;
 
 import com.colson.entity.*;
+import com.colson.util.Util;
 import com.thoughtworks.xstream.XStream;
+import net.sf.json.JSONObject;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -14,6 +16,38 @@ import java.util.*;
 
 public class WxService {
     private static final String TOKEN = "wwgzs";
+
+    private static final String GET_TOKEN_URL="https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=APPID&secret=APPSECRET";
+
+//    微信公众号
+    private static final String APPID = "wx2ee8a0d997f597c2";
+    private static final String APPSECRET = "76499c4dd5fc9b7672313f67bbaab470";
+
+    private static AccessToken at;
+
+    /**
+     * 获取token
+     */
+    private static void getToken() {
+        String url = GET_TOKEN_URL.replace("APPID", APPID).replace("APPSECRET", APPSECRET);
+        String tokenStr = Util.get(url);
+        JSONObject jsonObject = JSONObject.fromObject(tokenStr);
+        String token = jsonObject.getString("access_token");
+        String expireIn = jsonObject.getString("expires_in");
+        //创建token对象,并存起来。
+        at = new AccessToken(token, expireIn);
+    }
+
+    /**
+     * 向处暴露的获取token的方法
+     * @return
+     */
+    public static String getAccessToken() {
+        if(at==null||at.isExpired()) {
+            getToken();
+        }
+        return at.getAccessToken();
+    }
 
     /**
      * 验证签名
@@ -145,4 +179,7 @@ public class WxService {
         TextMessage tm = new TextMessage(parameterMap, resp);
         return tm;
     }
+
+
+
 }
